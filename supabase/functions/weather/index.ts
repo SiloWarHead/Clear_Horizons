@@ -45,13 +45,26 @@ serve(async (req) => {
     const targetDate = new Date(date);
     const timestamp = Math.floor(targetDate.getTime() / 1000);
 
-    // OpenWeather API for historical/forecast data
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${OPENWEATHER_API_KEY}&units=metric`;
+    // OpenWeather API current weather endpoint
+    const apiKey = OPENWEATHER_API_KEY.trim();
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${encodeURIComponent(apiKey)}&units=metric`;
 
     const resp = await fetch(url);
     if (!resp.ok) {
       const t = await resp.text();
       console.error("OpenWeather error:", resp.status, t);
+      if (resp.status === 401) {
+        return new Response(JSON.stringify({ error: "Invalid OpenWeather API key" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (resp.status === 429) {
+        return new Response(JSON.stringify({ error: "OpenWeather rate limit exceeded. Please try again later." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify({ error: "Upstream weather API error" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
