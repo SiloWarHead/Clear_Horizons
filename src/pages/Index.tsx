@@ -16,11 +16,11 @@ const Index = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const { toast } = useToast();
 
-  const handleSubmitCoordinates = async (lat: string, lng: string, date: Date) => {
+  const handleSubmitCoordinates = async (lat: string, lng: string, date: Date, apiKey: string) => {
     try {
 const dateStr = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 const { data, error } = await supabase.functions.invoke('weather', {
-  body: { lat, lng, date: dateStr },
+  body: { lat, lng, date: dateStr, apiKey },
 });
 if (error || (data && (data as any).error)) {
   throw new Error((data as any)?.error || (error as any)?.message || 'Unknown error');

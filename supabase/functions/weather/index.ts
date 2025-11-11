@@ -10,15 +10,16 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { lat, lng, date } = await req.json();
+    const { lat, lng, date, apiKey } = await req.json();
 
     if (
       typeof lat !== "string" ||
       typeof lng !== "string" ||
       typeof date !== "string" ||
-      !lat || !lng || !date
+      typeof apiKey !== "string" ||
+      !lat || !lng || !date || !apiKey
     ) {
-      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+      return new Response(JSON.stringify({ error: "Invalid request body. Provide lat, lng, date, and apiKey." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -33,21 +34,13 @@ serve(async (req) => {
       });
     }
 
-    const OPENWEATHER_API_KEY = Deno.env.get("OPENWEATHER_API_KEY");
-    if (!OPENWEATHER_API_KEY) {
-      return new Response(JSON.stringify({ error: "API key not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     // Parse the date to get Unix timestamp for the requested date
     const targetDate = new Date(date);
     const timestamp = Math.floor(targetDate.getTime() / 1000);
 
     // OpenWeather API current weather endpoint
-    const apiKey = OPENWEATHER_API_KEY.trim();
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${encodeURIComponent(apiKey)}&units=metric`;
+    const cleanApiKey = apiKey.trim();
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${encodeURIComponent(cleanApiKey)}&units=metric`;
 
     const resp = await fetch(url);
     if (!resp.ok) {
