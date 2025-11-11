@@ -6,12 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function mean(nums: number[]): number | null {
-  const filtered = nums.filter((n) => Number.isFinite(n));
-  if (!filtered.length) return null;
-  return filtered.reduce((a, b) => a + b, 0) / filtered.length;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -39,18 +33,25 @@ serve(async (req) => {
       });
     }
 
-    const start = encodeURIComponent(date);
-    const end = encodeURIComponent(date);
+    const OPENWEATHER_API_KEY = Deno.env.get("OPENWEATHER_API_KEY");
+    if (!OPENWEATHER_API_KEY) {
+      return new Response(JSON.stringify({ error: "API key not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const url =
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-      `&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,snowfall,surface_pressure` +
-      `&start_date=${start}&end_date=${end}&wind_speed_unit=kmh&timezone=auto`;
+    // Parse the date to get Unix timestamp for the requested date
+    const targetDate = new Date(date);
+    const timestamp = Math.floor(targetDate.getTime() / 1000);
+
+    // OpenWeather API for historical/forecast data
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${OPENWEATHER_API_KEY}&units=metric`;
 
     const resp = await fetch(url);
     if (!resp.ok) {
       const t = await resp.text();
-      console.error("Open-Meteo error:", resp.status, t);
+      console.error("OpenWeather error:", resp.status, t);
       return new Response(JSON.stringify({ error: "Upstream weather API error" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -58,44 +59,13 @@ serve(async (req) => {
     }
 
     const data = await resp.json();
-    const h = data?.hourly ?? {};
-
-    const temps: number[] = (h.temperature_2m ?? []).map((v: any) => Number(v));
-    const rhs: number[] = (h.relative_humidity_2m ?? []).map((v: any) => Number(v));
-    const winds: number[] = (h.wind_speed_10m ?? []).map((v: any) => Number(v));
-    const prec: number[] = (h.precipitation ?? []).map((v: any) => Number(v)); // mm
-    const snow: number[] = (h.snowfall ?? []).map((v: any) => Number(v)); // cm
-    const pres: number[] = (h.surface_pressure ?? []).map((v: any) => Number(v)); // hPa
-
-    // Air density calculation per hour, then mean
-    const airDensities: number[] = [];
-    const R_d = 287.05; // J/(kg·K)
-    const R_v = 461.495; // J/(kg·K)
-
-    for (let i = 0; i < Math.min(temps.length, rhs.length, pres.length); i++) {
-      const Tc = temps[i];
-      const RH = rhs[i];
-      const P_hPa = pres[i];
-      if (!Number.isFinite(Tc) || !Number.isFinite(RH) || !Number.isFinite(P_hPa)) continue;
-      const T = Tc + 273.15; // K
-
-      // Magnus formula for saturation vapor pressure (hPa)
-      const e_s = 6.112 * Math.exp((17.67 * Tc) / (Tc + 243.5));
-      const e = (RH / 100) * e_s; // hPa
-      const e_Pa = e * 100; // Pa
-      const P_Pa = P_hPa * 100; // Pa
-
-      const rho = (P_Pa - e_Pa) / (R_d * T) + e_Pa / (R_v * T); // kg/m^3
-      if (Number.isFinite(rho)) airDensities.push(rho);
-    }
+    console.log("OpenWeather response:", data);
 
     const result = {
-      average_temperature: mean(temps),
-      average_humidity: mean(rhs),
-      average_air_density: mean(airDensities),
-      average_wind_speed: mean(winds), // km/h
-      total_precipitation: prec.filter(Number.isFinite).reduce((a, b) => a + b, 0), // mm
-      total_snowfall: snow.filter(Number.isFinite).reduce((a, b) => a + b, 0), // cm
+      average_temperature: data.main?.temp ?? null,
+      average_humidity: data.main?.humidity ?? null,
+      average_wind_speed: data.wind?.speed ? data.wind.speed * 3.6 : null, // convert m/s to km/h
+      total_precipitation: data.rain?.["1h"] ?? 0, // mm in last hour
     };
 
     return new Response(JSON.stringify(result), {

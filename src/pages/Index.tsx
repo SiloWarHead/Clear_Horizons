@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Wind, Droplets, Thermometer, Activity, CloudRain, Snowflake } from 'lucide-react';
+import { Wind, Droplets, Thermometer, CloudRain } from 'lucide-react';
 import { MetricCard } from '@/components/MetricCard';
 import { CoordinateInput } from '@/components/CoordinateInput';
 import { useToast } from '@/hooks/use-toast';
@@ -8,10 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 interface WeatherData {
   temperature: string;
   humidity: string;
-  airQuality: string;
   windSpeed: string;
   rainfall: string;
-  snowfall: string;
 }
 
 const Index = () => {
@@ -31,10 +29,8 @@ if (error || (data && (data as any).error)) {
       setWeatherData({
         temperature: data?.average_temperature?.toFixed?.(1) ?? '--',
         humidity: data?.average_humidity?.toFixed?.(1) ?? '--',
-        airQuality: data?.average_air_density?.toFixed?.(3) ?? '--',
         windSpeed: data?.average_wind_speed?.toFixed?.(1) ?? '--',
         rainfall: data?.total_precipitation?.toFixed?.(1) ?? '--',
-        snowfall: data?.total_snowfall?.toFixed?.(1) ?? '--',
       });
 
       toast({
@@ -51,10 +47,8 @@ if (error || (data && (data as any).error)) {
   setWeatherData({
     temperature: 'Error',
     humidity: 'Error',
-    airQuality: 'Error',
     windSpeed: 'Error',
     rainfall: 'Error',
-    snowfall: 'Error',
   });
 }
   };
@@ -82,7 +76,7 @@ if (error || (data && (data as any).error)) {
         </div>
 
         {weatherData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <MetricCard
               title="Temperature"
               subtitle="Current Reading"
@@ -104,16 +98,6 @@ if (error || (data && (data as any).error)) {
             />
 
             <MetricCard
-              title="Air Quality"
-              subtitle="Current Index"
-              value={weatherData.airQuality}
-              unit="AQI"
-              icon={Activity}
-              iconColor="text-quality"
-              iconBg="bg-quality-light"
-            />
-
-            <MetricCard
               title="Wind Speed"
               subtitle="Current Measurement"
               value={weatherData.windSpeed}
@@ -125,20 +109,10 @@ if (error || (data && (data as any).error)) {
 
             <MetricCard
               title="Rainfall"
-              subtitle="Last 24 Hours"
+              subtitle="Last Hour"
               value={weatherData.rainfall}
               unit="mm"
               icon={CloudRain}
-              iconColor="text-sky"
-              iconBg="bg-sky-light"
-            />
-
-            <MetricCard
-              title="Snowfall"
-              subtitle="Last 24 Hours"
-              value={weatherData.snowfall}
-              unit="cm"
-              icon={Snowflake}
               iconColor="text-sky"
               iconBg="bg-sky-light"
             />
