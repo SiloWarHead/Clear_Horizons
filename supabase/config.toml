@@ -1,4 +1,1 @@
 project_id = "pwexilkmtxazbcyvoqbh"
-
-[functions.weather]
-verify_jwt = false

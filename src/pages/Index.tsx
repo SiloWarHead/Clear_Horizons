@@ -3,7 +3,6 @@ import { Wind, Droplets, Thermometer, CloudRain } from 'lucide-react';
 import { MetricCard } from '@/components/MetricCard';
 import { CoordinateInput } from '@/components/CoordinateInput';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface WeatherData {
   temperature: string;
@@ -18,39 +17,59 @@ const Index = () => {
 
   const handleSubmitCoordinates = async (lat: string, lng: string, date: Date, apiKey: string) => {
     try {
-const dateStr = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-const { data, error } = await supabase.functions.invoke('weather', {
-  body: { lat, lng, date: dateStr, apiKey },
-});
-if (error || (data && (data as any).error)) {
-  throw new Error((data as any)?.error || (error as any)?.message || 'Unknown error');
-}
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw new Error('Invalid coordinates');
+      }
+
+      const dateStr = date.toISOString().split('T')[0];
+      const cleanApiKey = apiKey.trim();
+      
+      // Call OpenWeather API directly
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${encodeURIComponent(cleanApiKey)}&units=metric`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 401) {
+          throw new Error('Invalid OpenWeather API key');
+        }
+        if (response.status === 429) {
+          throw new Error('OpenWeather rate limit exceeded. Please try again later.');
+        }
+        throw new Error(errorData.message || 'Failed to fetch weather data');
+      }
+
+      const data = await response.json();
 
       setWeatherData({
-        temperature: data?.average_temperature?.toFixed?.(1) ?? '--',
-        humidity: data?.average_humidity?.toFixed?.(1) ?? '--',
-        windSpeed: data?.average_wind_speed?.toFixed?.(1) ?? '--',
-        rainfall: data?.total_precipitation?.toFixed?.(1) ?? '--',
+        temperature: data.main?.temp?.toFixed?.(1) ?? '--',
+        humidity: data.main?.humidity?.toFixed?.(1) ?? '--',
+        windSpeed: data.wind?.speed ? (data.wind.speed * 3.6).toFixed(1) : '--', // m/s to km/h
+        rainfall: data.rain?.['1h']?.toFixed?.(1) ?? '0',
       });
 
       toast({
         title: 'Weather data fetched',
         description: `Fetched metrics for ${dateStr}`,
       });
-} catch (error: any) {
-  console.error('Error fetching weather data:', error);
-  toast({
-    title: 'Failed to fetch weather data',
-    description: error?.message ?? 'Unexpected error',
-    variant: 'destructive',
-  });
-  setWeatherData({
-    temperature: 'Error',
-    humidity: 'Error',
-    windSpeed: 'Error',
-    rainfall: 'Error',
-  });
-}
+    } catch (error: any) {
+      console.error('Error fetching weather data:', error);
+      toast({
+        title: 'Failed to fetch weather data',
+        description: error?.message ?? 'Unexpected error',
+        variant: 'destructive',
+      });
+      setWeatherData({
+        temperature: 'Error',
+        humidity: 'Error',
+        windSpeed: 'Error',
+        rainfall: 'Error',
+      });
+    }
   };
 
   return (
