@@ -10,14 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface CoordinateInputProps {
-  onSubmit: (lat: string, lng: string, date: Date, apiKey: string) => void;
+  onSubmit: (lat: string, lng: string, date: Date) => void;
 }
 
 export const CoordinateInput = ({ onSubmit }: CoordinateInputProps) => {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [date, setDate] = useState<Date>();
-  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
 
   const validateRange = (value: string, min: number, max: number, name: string): boolean => {
@@ -92,16 +91,7 @@ export const CoordinateInput = ({ onSubmit }: CoordinateInputProps) => {
       return;
     }
 
-    if (!apiKey.trim()) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your OpenWeather API key",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    onSubmit(latitude.trim(), longitude.trim(), date, apiKey.trim());
+    onSubmit(latitude.trim(), longitude.trim(), date);
     
     toast({
       title: "Coordinates Submitted",
@@ -172,18 +162,6 @@ export const CoordinateInput = ({ onSubmit }: CoordinateInputProps) => {
                 />
               </PopoverContent>
             </Popover>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="apiKey">OpenWeather API Key</Label>
-            <Input
-              id="apiKey"
-              type="password"
-              placeholder="Enter your API key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              required
-            />
           </div>
         </div>
 
