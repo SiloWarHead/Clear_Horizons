@@ -38,7 +38,7 @@ export default function Welcome() {
         <div className="absolute top-8 left-1/2 -translate-x-1/2">
           <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-            <span className="text-sm text-primary">NASA SpaceApps Challenge 2025</span>
+            <span className="text-sm text-primary">NASA Space Apps Challenge 2025</span>
           </div>
         </div>
 
