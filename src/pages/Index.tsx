@@ -15,7 +15,7 @@ const Index = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const { toast } = useToast();
 
-  const handleSubmitCoordinates = async (lat: string, lng: string, date: Date, apiKey: string) => {
+  const handleSubmitCoordinates = async (lat: string, lng: string, date: Date) => {
     try {
       const latitude = parseFloat(lat);
       const longitude = parseFloat(lng);
@@ -25,10 +25,10 @@ const Index = () => {
       }
 
       const dateStr = date.toISOString().split('T')[0];
-      const cleanApiKey = apiKey.trim();
+      const apiKey = '8e13f89df921e28f391bc7c22ddf572d';
       
       // Call OpenWeather API directly
-      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${encodeURIComponent(cleanApiKey)}&units=metric`;
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
       
       const response = await fetch(url);
       
