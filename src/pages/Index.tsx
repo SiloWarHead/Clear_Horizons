@@ -25,7 +25,7 @@ const Index = () => {
       }
 
       const dateStr = date.toISOString().split('T')[0];
-      const apiKey = '118957adeb3988c9ff4a07434c12b6e2';
+      const apiKey = '8e13f89df921e28f391bc7c22ddf572d';
       
       // Call OpenWeather API directly
       const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
