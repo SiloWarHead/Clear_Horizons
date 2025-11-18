@@ -39,18 +39,15 @@ export const Map = ({ onCoordinateSelect, selectedPosition }: MapProps) => {
       </div>
       
       <div className="h-[400px] rounded-lg overflow-hidden">
-        <MapContainer
-          center={[20, 0]}
-          zoom={2}
-          style={{ height: '100%', width: '100%' }}
-          className="z-0"
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <MapClickHandler onCoordinateSelect={onCoordinateSelect} />
-          {selectedPosition && <Marker position={selectedPosition} />}
+        <MapContainer center={[20, 0]} zoom={2} style={{ height: '100%', width: '100%' }} className="z-0">
+          <>
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <MapClickHandler onCoordinateSelect={onCoordinateSelect} />
+            {selectedPosition && <Marker position={selectedPosition} />}
+          </>
         </MapContainer>
       </div>
     </div>
