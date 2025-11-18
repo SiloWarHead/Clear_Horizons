@@ -100,7 +100,7 @@ export const CoordinateInput = ({ onSubmit }: CoordinateInputProps) => {
   };
 
   return (
-    <div className="metric-card p-6">
+    <div className="metric-card p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 rounded-xl bg-primary/10">
           <MapPin className="w-6 h-6 text-primary" />
@@ -112,7 +112,7 @@ export const CoordinateInput = ({ onSubmit }: CoordinateInputProps) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="latitude">Latitude</Label>
             <Input
