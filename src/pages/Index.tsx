@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Wind, Droplets, Thermometer, CloudRain } from 'lucide-react';
 import { MetricCard } from '@/components/MetricCard';
 import { CoordinateInput } from '@/components/CoordinateInput';
+import { Map } from '@/components/Map';
 import { useToast } from '@/hooks/use-toast';
 
 interface WeatherData {
@@ -13,7 +14,12 @@ interface WeatherData {
 
 const Index = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState<[number, number] | null>(null);
   const { toast } = useToast();
+
+  const handleMapClick = (lat: number, lng: number) => {
+    setSelectedPosition([lat, lng]);
+  };
 
   const handleSubmitCoordinates = async (lat: string, lng: string, date: Date) => {
     try {
@@ -91,7 +97,11 @@ const Index = () => {
       <div className="container mx-auto px-4 pb-8 max-w-7xl">
 
         <div className="mb-8">
-          <CoordinateInput onSubmit={handleSubmitCoordinates} />
+          <CoordinateInput onSubmit={handleSubmitCoordinates} selectedCoordinates={selectedPosition} />
+        </div>
+
+        <div className="mb-8">
+          <Map onCoordinateSelect={handleMapClick} selectedPosition={selectedPosition} />
         </div>
 
         {weatherData && (

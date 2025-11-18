@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
@@ -11,13 +11,21 @@ import { cn } from '@/lib/utils';
 
 interface CoordinateInputProps {
   onSubmit: (lat: string, lng: string, date: Date) => void;
+  selectedCoordinates?: [number, number] | null;
 }
 
-export const CoordinateInput = ({ onSubmit }: CoordinateInputProps) => {
+export const CoordinateInput = ({ onSubmit, selectedCoordinates }: CoordinateInputProps) => {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [date, setDate] = useState<Date>();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (selectedCoordinates) {
+      setLatitude(selectedCoordinates[0].toFixed(6));
+      setLongitude(selectedCoordinates[1].toFixed(6));
+    }
+  }, [selectedCoordinates]);
 
   const validateRange = (value: string, min: number, max: number, name: string): boolean => {
     const trimmed = value.trim();
