@@ -179,6 +179,65 @@ Simply visit the [Lovable Project](https://lovable.dev/projects/bfbf5145-28e3-4e
 
 Simply open [Lovable](https://lovable.dev/projects/bfbf5145-28e3-4e23-a4aa-908545cfe4f7) and click on Share → Publish.
 
+### Deploy to Render
+
+You can deploy this application to Render using a **Static Site** service:
+
+#### Step-by-Step Instructions:
+
+1. **Create a Render Account**
+   - Go to [render.com](https://render.com) and sign up/log in
+
+2. **Connect Your GitHub Repository**
+   - Click "New +" → "Static Site"
+   - Connect your GitHub account if not already connected
+   - Select this repository
+
+3. **Configure Build Settings**
+   
+   Use the following settings:
+   
+   | Setting | Value |
+   |---------|-------|
+   | **Name** | `clearhorizons-dashboard` (or your preferred name) |
+   | **Root Directory** | `.` (leave blank or use root) |
+   | **Build Command** | `npm install && npm run build` |
+   | **Publish Directory** | `dist` |
+
+4. **Add Environment Variables**
+   
+   In the "Environment" section, add these variables:
+   
+   ```
+   VITE_SUPABASE_PROJECT_ID=pwexilkmtxazbcyvoqbh
+   VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3ZXhpbGttdHhhemJjeXZvcWJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxNjU0ODAsImV4cCI6MjA3NTc0MTQ4MH0.W7xpLdFurbqnbP-ot1U7CCQB4aav0IveYM7K_NvcpxE
+   VITE_SUPABASE_URL=https://pwexilkmtxazbcyvoqbh.supabase.co
+   ```
+
+5. **Deploy**
+   - Click "Create Static Site"
+   - Render will automatically build and deploy your application
+   - Wait for the build to complete (usually 2-5 minutes)
+
+6. **Access Your App**
+   - Once deployed, Render will provide you with a URL like: `https://clearhorizons-dashboard.onrender.com`
+   - Your app is now live!
+
+#### Important Notes:
+
+- **Automatic Deploys**: Render automatically redeploys your site whenever you push to the main branch
+- **Edge Functions**: The Supabase edge functions (like `fetch-nasa-power`) are hosted on Lovable Cloud and will continue to work from your Render deployment
+- **Free Tier**: Render offers a free tier for static sites with some limitations
+- **Build Time**: Initial builds may take 3-5 minutes
+
+#### Troubleshooting:
+
+If your build fails:
+1. Check that the build command is correct: `npm install && npm run build`
+2. Verify environment variables are set correctly
+3. Check the build logs in Render dashboard for specific errors
+4. Ensure your `package.json` has the correct Node.js version (18+)
+
 ### Custom Domain
 
 To connect a custom domain, navigate to Project > Settings > Domains and click Connect Domain.
