@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Wind, Droplets, Thermometer, CloudRain } from 'lucide-react';
+import { Wind, Droplets, Thermometer, CloudRain, Sun, ArrowUpDown } from 'lucide-react';
 import { MetricCard } from '@/components/MetricCard';
 import { CoordinateInput } from '@/components/CoordinateInput';
 import { Map } from '@/components/Map';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WeatherData {
   temperature: string;
@@ -12,8 +13,19 @@ interface WeatherData {
   rainfall: string;
 }
 
+interface NASAPowerData {
+  temperature: string;
+  temperatureMax: string;
+  temperatureMin: string;
+  precipitation: string;
+  humidity: string;
+  windSpeed: string;
+  solarRadiation: string;
+}
+
 const Index = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [nasaData, setNasaData] = useState<NASAPowerData | null>(null);
   const [selectedPosition, setSelectedPosition] = useState<[number, number] | null>(null);
   const { toast } = useToast();
 
@@ -57,6 +69,31 @@ const Index = () => {
         windSpeed: data.wind?.speed ? (data.wind.speed * 3.6).toFixed(1) : '--', // m/s to km/h
         rainfall: data.rain?.['1h']?.toFixed?.(1) ?? '0',
       });
+
+      // Fetch NASA POWER data
+      const nasaDate = date.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+      const { data: nasaPowerData, error: nasaError } = await supabase.functions.invoke('fetch-nasa-power', {
+        body: { latitude, longitude, date: nasaDate }
+      });
+
+      if (nasaError) {
+        console.error('NASA POWER API error:', nasaError);
+        toast({
+          title: 'NASA POWER data unavailable',
+          description: 'Using OpenWeather data only',
+          variant: 'default',
+        });
+      } else if (nasaPowerData) {
+        setNasaData({
+          temperature: nasaPowerData.temperature?.toFixed?.(1) ?? '--',
+          temperatureMax: nasaPowerData.temperatureMax?.toFixed?.(1) ?? '--',
+          temperatureMin: nasaPowerData.temperatureMin?.toFixed?.(1) ?? '--',
+          precipitation: nasaPowerData.precipitation?.toFixed?.(2) ?? '--',
+          humidity: nasaPowerData.humidity?.toFixed?.(1) ?? '--',
+          windSpeed: nasaPowerData.windSpeed?.toFixed?.(1) ?? '--',
+          solarRadiation: nasaPowerData.solarRadiation?.toFixed?.(2) ?? '--',
+        });
+      }
 
       toast({
         title: 'Weather data fetched',
@@ -105,47 +142,103 @@ const Index = () => {
         </div>
 
         {weatherData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <MetricCard
-              title="Temperature"
-              subtitle="Current Reading"
-              value={weatherData.temperature}
-              unit="°C"
-              icon={Thermometer}
-              iconColor="text-temp"
-              iconBg="bg-temp-light"
-            />
+          <>
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-card-foreground mb-2">OpenWeather Data</h2>
+              <p className="text-muted-foreground text-sm">Real-time current weather conditions</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              <MetricCard
+                title="Temperature"
+                subtitle="Current Reading"
+                value={weatherData.temperature}
+                unit="°C"
+                icon={Thermometer}
+                iconColor="text-temp"
+                iconBg="bg-temp-light"
+              />
 
-            <MetricCard
-              title="Humidity"
-              subtitle="Current Level"
-              value={weatherData.humidity}
-              unit="%"
-              icon={Droplets}
-              iconColor="text-sky"
-              iconBg="bg-sky-light"
-            />
+              <MetricCard
+                title="Humidity"
+                subtitle="Current Level"
+                value={weatherData.humidity}
+                unit="%"
+                icon={Droplets}
+                iconColor="text-sky"
+                iconBg="bg-sky-light"
+              />
 
-            <MetricCard
-              title="Wind Speed"
-              subtitle="Current Measurement"
-              value={weatherData.windSpeed}
-              unit="km/h"
-              icon={Wind}
-              iconColor="text-wind"
-              iconBg="bg-wind-light"
-            />
+              <MetricCard
+                title="Wind Speed"
+                subtitle="Current Measurement"
+                value={weatherData.windSpeed}
+                unit="km/h"
+                icon={Wind}
+                iconColor="text-wind"
+                iconBg="bg-wind-light"
+              />
 
-            <MetricCard
-              title="Rainfall"
-              subtitle="Last Hour"
-              value={weatherData.rainfall}
-              unit="mm"
-              icon={CloudRain}
-              iconColor="text-sky"
-              iconBg="bg-sky-light"
-            />
-          </div>
+              <MetricCard
+                title="Rainfall"
+                subtitle="Last Hour"
+                value={weatherData.rainfall}
+                unit="mm"
+                icon={CloudRain}
+                iconColor="text-sky"
+                iconBg="bg-sky-light"
+              />
+            </div>
+          </>
+        )}
+
+        {nasaData && (
+          <>
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-card-foreground mb-2">NASA POWER Data</h2>
+              <p className="text-muted-foreground text-sm">Satellite-derived daily climate data</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <MetricCard
+                title="Avg Temperature"
+                subtitle="Daily Average"
+                value={nasaData.temperature}
+                unit="°C"
+                icon={Thermometer}
+                iconColor="text-temp"
+                iconBg="bg-temp-light"
+              />
+
+              <MetricCard
+                title="Temp Range"
+                subtitle="Min to Max"
+                value={`${nasaData.temperatureMin} - ${nasaData.temperatureMax}`}
+                unit="°C"
+                icon={ArrowUpDown}
+                iconColor="text-temp"
+                iconBg="bg-temp-light"
+              />
+
+              <MetricCard
+                title="Solar Radiation"
+                subtitle="Daily Average"
+                value={nasaData.solarRadiation}
+                unit="kW-hr/m²/day"
+                icon={Sun}
+                iconColor="text-yellow-500"
+                iconBg="bg-yellow-100 dark:bg-yellow-950"
+              />
+
+              <MetricCard
+                title="Precipitation"
+                subtitle="Daily Total"
+                value={nasaData.precipitation}
+                unit="mm/day"
+                icon={CloudRain}
+                iconColor="text-sky"
+                iconBg="bg-sky-light"
+              />
+            </div>
+          </>
         )}
 
         <footer className="text-center py-6 text-muted-foreground text-sm">
