@@ -70,30 +70,45 @@ const Index = () => {
         rainfall: data.rain?.['1h']?.toFixed?.(1) ?? '0',
       });
 
-      // Fetch NASA POWER data
-      const nasaDate = date.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
-      const { data: nasaPowerData, error: nasaError } = await supabase.functions.invoke('fetch-nasa-power', {
-        body: { latitude, longitude, date: nasaDate }
-      });
+      // Fetch NASA POWER data only for non-future dates to avoid NASA API errors
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const selectedDate = new Date(date);
+      selectedDate.setUTCHours(0, 0, 0, 0);
 
-      if (nasaError) {
-        console.error('NASA POWER API error:', nasaError);
+      if (selectedDate > today) {
+        console.warn('NASA POWER not available for future dates, skipping call');
         toast({
-          title: 'NASA POWER data unavailable',
-          description: 'Using OpenWeather data only',
+          title: 'NASA POWER data unavailable for future dates',
+          description: 'Please select today or a past date for NASA climate data. OpenWeather data is still shown.',
           variant: 'default',
         });
-      } else if (nasaPowerData) {
-        setNasaData({
-          temperature: nasaPowerData.temperature?.toFixed?.(1) ?? '--',
-          temperatureMax: nasaPowerData.temperatureMax?.toFixed?.(1) ?? '--',
-          temperatureMin: nasaPowerData.temperatureMin?.toFixed?.(1) ?? '--',
-          precipitation: nasaPowerData.precipitation?.toFixed?.(2) ?? '--',
-          humidity: nasaPowerData.humidity?.toFixed?.(1) ?? '--',
-          windSpeed: nasaPowerData.windSpeed?.toFixed?.(1) ?? '--',
-          solarRadiation: nasaPowerData.solarRadiation?.toFixed?.(2) ?? '--',
+      } else {
+        const nasaDate = selectedDate.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+        const { data: nasaPowerData, error: nasaError } = await supabase.functions.invoke('fetch-nasa-power', {
+          body: { latitude, longitude, date: nasaDate }
         });
+
+        if (nasaError) {
+          console.error('NASA POWER API error:', nasaError);
+          toast({
+            title: 'NASA POWER data unavailable',
+            description: 'Using OpenWeather data only',
+            variant: 'default',
+          });
+        } else if (nasaPowerData) {
+          setNasaData({
+            temperature: nasaPowerData.temperature?.toFixed?.(1) ?? '--',
+            temperatureMax: nasaPowerData.temperatureMax?.toFixed?.(1) ?? '--',
+            temperatureMin: nasaPowerData.temperatureMin?.toFixed?.(1) ?? '--',
+            precipitation: nasaPowerData.precipitation?.toFixed?.(2) ?? '--',
+            humidity: nasaPowerData.humidity?.toFixed?.(1) ?? '--',
+            windSpeed: nasaPowerData.windSpeed?.toFixed?.(1) ?? '--',
+            solarRadiation: nasaPowerData.solarRadiation?.toFixed?.(2) ?? '--',
+          });
+        }
       }
+
 
       toast({
         title: 'Weather data fetched',
