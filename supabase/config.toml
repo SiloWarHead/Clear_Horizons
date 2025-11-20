@@ -1,1 +1,4 @@
 project_id = "pwexilkmtxazbcyvoqbh"
+
+[functions.fetch-nasa-power]
+verify_jwt = false
